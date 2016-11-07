@@ -90,7 +90,24 @@ Redmine::Plugin.register :redmine_wiki_html_util do
       # For security, only allow insertion on protected (locked) wiki pages
       if true || page.protected 
         result = "<script> var head = document.getElementsByTagName('head')[0], t = document.createElement('script'); t.src = "+args[0]+"; t.type='text/javascript'; head.appendChild(t); </script>"
-        result = "#{ CGI::unescapeHTML(result) }".html_safe        
+        result = "#{ CGI::unescapeHTML(result) }".html_safe
+        return result
+      else
+        return "<!-- Macro removed due to wiki page being unprotected -->"
+      end
+    end 
+  end
+
+  Redmine::WikiFormatting::Macros.register do
+    desc "Embed raw css class\nUsage:\n<pre>{{class_text(classname, text)}}</pre>"
+    macro :class_text do |obj, args|
+      page = obj.page
+      raise 'Page not found' if page.nil?
+
+      # For security, only allow insertion on protected (locked) wiki pages
+      if true || page.protected
+        result = "<span class=\""+args[0]+"\">"+args[1]+"</span>"
+        result = "#{ CGI::unescapeHTML(result) }".html_safe
         return result
       else
         return "<!-- Macro removed due to wiki page being unprotected -->"
