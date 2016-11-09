@@ -106,13 +106,45 @@ Redmine::Plugin.register :redmine_wiki_html_util do
 
       # For security, only allow insertion on protected (locked) wiki pages
       if true || page.protected
-        result = "<span class=\""+args[0]+"\">"+args[1]+"</span>"
+        content = args[1]
+        content.gsub! /(<|&lt;)/, "< "
+        content.gsub! /(>|&gt;)/, " >"
+        result = "<span class=\""+args[0]+"\">"+content+"</span>"
         result = "#{ CGI::unescapeHTML(result) }".html_safe
         return result
       else
         return "<!-- Macro removed due to wiki page being unprotected -->"
       end
     end 
+  end
+
+  Redmine::WikiFormatting::Macros.register do
+    desc "Info"
+    macro :info, :parse_args => false do |obj, args, text|
+      page = obj.page
+      raise 'Page not found' if page.nil?
+
+      o = '<span class="wiki_extensions_lastupdated_at">'
+      o << l(:label_updated_time, time_tag(page.updated_on))
+      o << '</span>'
+      o << ' '
+      o << '<span class="wiki_extensions_lastupdated_by">'
+      o << link_to_user(obj.author)
+      o << '</span>'
+      o.html_safe
+    end
+  end
+
+  Redmine::WikiFormatting::Macros.register do
+    desc "Info"
+    macro :fb, :parse_args => false do |obj, args, text|
+      page = obj.page
+      raise 'Page not found' if page.nil?
+      fb_id = text || args
+      fb_url = "http://fogbugz.gdc-tech.com/fogbugz/default.asp?%s" % [fb_id]
+      o = link_to fb_id, fb_url
+      o.html_safe
+    end
   end
 
 end
